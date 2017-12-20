@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.company.dao.idao.CartMapper" >
+  <resultMap id="BaseResultMap" type="com.company.dao.pojo.Cart" >
+    <constructor >
+      <idArg column="id" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="user_id" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="product_id" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="quantity" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="checked" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="create_time" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="update_time" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+    </constructor>
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, user_id, product_id, quantity, checked, create_time, update_time
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from mmall_cart
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from mmall_cart
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+
+  <insert id="insert" parameterType="com.company.dao.pojo.Cart" >
+  insert into mmall_cart (id, user_id, product_id,
+  quantity, checked, create_time,
+  update_time)
+  values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{productId,jdbcType=INTEGER},
+  #{quantity,jdbcType=INTEGER}, #{checked,jdbcType=INTEGER}, now(),
+  now())
+</insert>
+  <insert id="insertSelective" parameterType="com.company.dao.pojo.Cart" >
+    insert into mmall_cart
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="userId != null" >
+        user_id,
+      </if>
+      <if test="productId != null" >
+        product_id,
+      </if>
+      <if test="quantity != null" >
+        quantity,
+      </if>
+      <if test="checked != null" >
+        checked,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+      <if test="updateTime != null" >
+        update_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="userId != null" >
+        #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="productId != null" >
+        #{productId,jdbcType=INTEGER},
+      </if>
+      <if test="quantity != null" >
+        #{quantity,jdbcType=INTEGER},
+      </if>
+      <if test="checked != null" >
+        #{checked,jdbcType=INTEGER},
+      </if>
+        now(),now()
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.company.dao.pojo.Cart" >
+    update mmall_cart
+    <set >
+      <if test="userId != null" >
+        user_id = #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="productId != null" >
+        product_id = #{productId,jdbcType=INTEGER},
+      </if>
+      <if test="quantity != null" >
+        quantity = #{quantity,jdbcType=INTEGER},
+      </if>
+      <if test="checked != null" >
+        checked = #{checked,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null" >
+        update_time = now(),
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.company.dao.pojo.Cart" >
+    update mmall_cart
+    set user_id = #{userId,jdbcType=INTEGER},
+      product_id = #{productId,jdbcType=INTEGER},
+      quantity = #{quantity,jdbcType=INTEGER},
+      checked = #{checked,jdbcType=INTEGER},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      update_time = now()
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectByChecked" resultMap="BaseResultMap" parameterType="java.lang.Integer">
+    SELECT
+    <include refid="Base_Column_List"/>
+    FROM mmall_cart
+    WHERE user_id = #{userId } and checked = 1;
+  </select>
+  <!--更新购物车某个产品数量-->
+  <update id="updateNum" parameterType="map">
+      UPDATE mmall_cart
+      set quantity=#{count},update_time=now()
+      where user_id = #{userId} and product_id=#{productId}
+  </update>
+
+  <!--展示购物车商品-->
+  <select id="findAllProduct" resultType="com.company.dao.vo.CartProduct" parameterType="integer">
+      select t1.id,t1.user_id userId,t1.product_id productId,t1.quantity,t2.name productName,t2.subtitle productSubtitle,t2.main_image productMainImage,t2.price productPrice,
+      t2.status productStatus,t1.quantity*t2.price productTotalPrice,t2.stock productStock ,t1.checked productChecked from mmall_cart t1
+      inner join mmall_product t2
+      on t1.product_id = t2.id
+      where user_id = #{userId}
+  </select>
+
+  <!--购物车添加商品-->
+ <insert id="addProduct" parameterType="map" >
+      insert into mmall_cart ( user_id, product_id,
+      quantity, create_time,
+      update_time)
+    values ( #{userId,jdbcType=INTEGER}, #{productId,jdbcType=INTEGER},
+      #{count,jdbcType=INTEGER}, now(),
+      now())
+ </insert>
+  <!--移除购物车某个产品-->
+    <delete id="deleteProduct" parameterType="map">
+        delete from mmall_cart
+        where user_id = #{userId} and product_id in
+        <foreach collection="productIds" item="productIds" open="(" separator="," close=")" index="index">
+            #{productIds}
+        </foreach>
+    </delete>
+  <!--购物车选中某个商品-->
+  <update id="checkOneProduct" parameterType="map">
+      UPDATE mmall_cart
+      SET  checked = 1
+      WHERE  product_id=#{productId} and user_id=#{userId}
+  </update>
+  <!-- 购物车取消选中某个商品 -->
+  <update id="unCheckedProduct" parameterType="map">
+    UPDATE mmall_cart
+    SET  checked = 0
+    WHERE  product_id=#{productId} and user_id=#{userId}
+  </update>
+
+  <!-- 查询购物车中的商品数量-->
+  <select id="findCount" resultType="java.lang.Integer">
+    SELECT count(*)
+    from mmall_cart
+    where user_id=#{userId}
+  </select>
+  <!--购物车全选-->
+  <update id="allCheck" parameterType="integer">
+     UPDATE mmall_cart
+     set checked=1
+     where user_id=#{userId}
+  </update>
+
+  <!--购物车取消全选-->
+  <update id="allUnCheck" parameterType="integer">
+     UPDATE mmall_cart
+     set checked=0
+     where user_id=#{userId}
+  </update>
+</mapper>
